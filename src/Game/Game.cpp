@@ -47,19 +47,7 @@ GAME::GAME()
     chunkplayerX = 1;
     playerY = 0;
     playerX = 0;
-    for (int i = -1;i<2;i++)
-        for (int j = -1 ;j<2;j++)
-        {
-            if (((chunkplayerY + i) == (ChunkSizeY)) || ((chunkplayerY + i) == -1) || ((chunkplayerX + j) == -1) || ((chunkplayerX + j) == ChunkSizeX))
-            {
-                continue;
-            }
-            MAP_BLOCKS[chunkplayerY + i][chunkplayerX + j].resize(GlobalSizeY);
-            for (int k = 0; k < GlobalSizeY; k++)
-                MAP_BLOCKS[chunkplayerY + i][chunkplayerX + j][k].resize(GlobalSizeX);
-        }
-    MAP_BLOCKS[chunkplayerY][chunkplayerX][playerY][playerX] = new MapBlock(chunkplayerY, chunkplayerX,playerY, playerX);
-
+    
     spawnNewPlayer(chunkplayerY, chunkplayerX, playerY, playerX);
 }
 
@@ -447,13 +435,30 @@ int GAME::checkAttackBlockPtr(int chunkY, int chunkX, int Y, int X)
 
 void GAME::spawnNewPlayer()
 {
-    player = new Player();
-    setEntity(0,0,0,0, player);
+    int chunkY, chunkX, Y, X;
+
+    do{
+        chunkX = rand() % ChunkSizeX;
+        chunkY = rand() % ChunkSizeY;
+        X = rand() % GlobalSizeX;
+        Y = rand() % GlobalSizeY;
+    }while (checkEntity(chunkY, chunkX, Y, X));
+    
+    if(player == nullptr)
+        player = new Player(chunkY, chunkX, Y, X);
+    else
+    {
+        clearEntityAtBlock(player);
+        player->reset(chunkY, chunkX, Y, X);
+    }
+    genChunksAfterSpawn(chunkY, chunkX, Y, X);
+    setEntity(chunkY, chunkX, Y, X, player);
     setFromPlayerScreenPos();
 }
 void GAME::spawnNewPlayer(int chunkY, int chunkX, int Y, int X)
 {
     player = new Player(chunkY, chunkX, Y, X);
+    genChunksAfterSpawn(chunkY, chunkX, Y, X);
     setEntity(chunkY, chunkX, Y, X, player);
     setFromPlayerScreenPos();
 }
@@ -476,6 +481,37 @@ Player* GAME::getPLayerPtr()
 {
     return player;
 }
+
+void GAME::genChunksAfterSpawn(int chunkY, int chunkX, int Y, int X)
+{
+    for (int i = -1;i<2;i++)
+        for (int j = -1 ;j<2;j++)
+        {
+            if (((chunkY + i) == (ChunkSizeY)) || ((chunkY + i) == -1) || ((chunkX + j) == -1) || ((chunkX + j) == ChunkSizeX))
+            {
+                continue;
+            }
+            MAP_BLOCKS[chunkY + i][chunkX + j].resize(GlobalSizeY);
+            for (int k = 0; k < GlobalSizeY; k++)
+                MAP_BLOCKS[chunkY + i][chunkX + j][k].resize(GlobalSizeX);
+        }
+    MAP_BLOCKS[chunkY][chunkX][Y][X] = new MapBlock(chunkY, chunkX,Y, X);
+}
+
+int GAME::checkEntity(int chunkY, int chunkX, int Y, int X)
+{
+    if(MAP_BLOCKS[chunkY][chunkX][Y][X] == nullptr)
+        return 0;
+    else
+        return !MAP_BLOCKS[chunkY][chunkX][Y][X]->isEmpty();;
+}
+
+void GAME::clearEntityAtBlock(Entity* entity)
+{
+    MAP_BLOCKS[entity->getChunkPosY()][entity->getChunkPosX()][entity->getPosY()][entity->getPosX()]->setEntity(nullptr);
+}
+
+//-----------------------------------------------------------------------
 
 MapBlock::MapBlock(int chunkY, int chunkX, int Y,int X)
 {
@@ -928,7 +964,6 @@ Player::Player(int chunkY, int chunkX, int Y,int X) : Entity( chunkY,  chunkX, Y
 void Player::killThisEntity()
 {
     GAME::spawnNewPlayer();
-    delete this;
 }
 
 //void Player::update()
@@ -984,6 +1019,27 @@ void Player::action(wchar_t way)
     screenPosX = posX;
     screenChunkPosY = chunkPosY;
     screenChunkPosX = chunkPosX;
+}
+
+void Player::reset(int chunkY, int chunkX, int Y,int X)
+{
+    fg = {255,170,0};
+    bg = {135,75,7};
+    damage = 50;
+    health = 100;
+    standartDelay = 0;
+    isPlayer = true;
+    entitysModel = L"@!";
+    constEntityModel = L"@!";
+    attackEntityModel = L"@-";
+    screenPosY = Y;
+    screenPosX = X;
+    screenChunkPosY = chunkY;
+    screenChunkPosX = chunkX;
+    chunkPosY = chunkY;
+    chunkPosX = chunkX;
+    posY = Y;
+    posX = X;
 }
 
 int Player::getPlrScrPosY()

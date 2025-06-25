@@ -33,6 +33,10 @@ class GAME
     static int FrameCount;
     static double FPS;
     static Player* player;
+
+    static void genChunksAfterSpawn(int chunkY, int chunkX, int Y, int X);
+    static int checkEntity(int chunkY, int chunkX, int Y, int X);
+    static void clearEntityAtBlock(Entity*);
 public:
     GAME();
     ~GAME();
@@ -140,6 +144,7 @@ public:
     void killThisEntity() override;
     void action();
     void action(wchar_t way);
+    void reset(int chunkY, int chunkX, int Y,int X);
     static int getPlrScrPosY();
     static int getPlrScrPosX();
     static int getPlrScrChunkPosY();
