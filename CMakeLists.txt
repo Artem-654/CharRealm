@@ -16,6 +16,7 @@ set(CMAKE_CXX_STANDARD 20)
 #    /path/to/lib3.a
 #    # Додавай інші бібліотеки
 #)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -static-libgcc -static-libstdc++")
 
 add_subdirectory(src/Core)
 add_subdirectory(src/Game)
